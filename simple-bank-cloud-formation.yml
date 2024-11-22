@@ -281,6 +281,13 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${ApplicationName}-rds-sg"
+  RDSDBSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: subnet group for database
+      SubnetIds:
+        - !Ref PublicSubnet01
+        - !Ref PublicSubnet02
   RDSDBInstance:
     Type: "AWS::RDS::DBInstance"
     Properties:
@@ -319,13 +326,6 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub "${ApplicationName}-rds"
-  RDSDBSubnetGroup:
-    Type: "AWS::RDS::DBSubnetGroup"
-    Properties:
-      DBSubnetGroupDescription: subnet group for database
-      SubnetIds:
-        - !Ref PublicSubnet01
-        - !Ref PublicSubnet02
 
   # Secrets Manager
   SecretsManagerSecret:
@@ -544,7 +544,7 @@ Resources:
       GroupDescription: Access to the redis cache
       VpcId: !Ref "VPC"
       SecurityGroupIngress:
-        - CidrIp: 0.0.0.0/0
+        - CidrIp: !FindInMap ["VPCMap", "VPC", "CIDR"]
           IpProtocol: tcp
           FromPort: !FindInMap ["ContainersMap", "Cache", "Port"]
           ToPort: !FindInMap ["ContainersMap", "Cache", "Port"]
@@ -595,7 +595,6 @@ Resources:
           Image: redis:7.4.1-alpine
           PortMappings:
             - ContainerPort: !FindInMap ["ContainersMap", "Cache", "Port"]
-              HostPort: !FindInMap ["ContainersMap", "Cache", "Port"]
               Name: !Sub "${ApplicationName}-cache"
           Secrets:
             - Name: REDIS_PASSWORD
